@@ -1,6 +1,7 @@
 package org.springframework.data.elasticsearch.repositories;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.lucene.search.join.ScoreMode;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -20,7 +21,6 @@ import javax.annotation.Resource;
 import java.util.*;
 
 import static java.util.Arrays.asList;
-import static org.elasticsearch.index.query.FilterBuilders.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
@@ -50,7 +50,7 @@ public class SampleBookRepositoryTest {
         book.setVersion(System.currentTimeMillis());
         repository.save(book);
         //lets try to search same record in elasticsearch
-        Book indexedBook = repository.findOne(book.getId());
+        Book indexedBook = repository.findById(book.getId()).get();
         assertThat(indexedBook,is(notNullValue()));
         assertThat(indexedBook.getId(),is(book.getId()));
     }
@@ -61,11 +61,11 @@ public class SampleBookRepositoryTest {
         Book book1 = new Book(RandomStringUtils.random(5),"Spring Data",System.currentTimeMillis());
         Book book2 = new Book(RandomStringUtils.random(5),"Spring Data Elasticsearch",System.currentTimeMillis());
         //Bulk Index using repository
-        repository.save(asList(book1, book2));
+        repository.saveAll(asList(book1, book2));
         //lets try to search same records in elasticsearch
-        Book indexedBook1 = repository.findOne(book1.getId());
+        Book indexedBook1 = repository.findById(book1.getId()).get();
         assertThat(indexedBook1.getId(), is(book1.getId()));
-        Book indexedBook2 = repository.findOne(book2.getId());
+        Book indexedBook2 = repository.findById(book2.getId()).get();
         assertThat(indexedBook2.getId(),is(book2.getId()));
     }
 
@@ -80,9 +80,9 @@ public class SampleBookRepositoryTest {
         //indexing single document
         repository.save(book1);
         //bulk indexing multiple documents
-        repository.save(books);
+        repository.saveAll(books);
         //searching single document based on documentId
-        Book book = repository.findOne(book1.getId());
+        Book book = repository.findById(book1.getId()).get();
         //to get all records as iteratable collection
         Iterable<Book> bookList = repository.findAll();
         //page request which will give first 10 document
@@ -92,13 +92,13 @@ public class SampleBookRepositoryTest {
         //to get total number of docoments in an index
         Long count = repository.count();
         //to check wheather document exists or not
-        boolean exists = repository.exists(book1.getId());
+        boolean exists = repository.existsById(book1.getId());
         //delete a document by entity
         repository.delete(book1);
         //delete multiple document using collection
-        repository.delete(books);
+        repository.deleteAll(books);
         //delete a document using documentId
-        repository.delete(book1.getId());
+        repository.deleteById(book1.getId());
         //delete all document
         repository.deleteAll();
     }
@@ -108,11 +108,11 @@ public class SampleBookRepositoryTest {
 
         List<Book> books = new ArrayList<Book>();
         for(int i=1; i<=10 ; i++){
-           books.add(new Book(RandomStringUtils.random(5),"Spring Data Rocks !",System.currentTimeMillis()));
+            books.add(new Book(RandomStringUtils.random(5), "Spring Data Rocks !", System.currentTimeMillis()));
 
         }
         //Bulk Index using repository
-        repository.save(books);
+        repository.saveAll(books);
         //count all elements
         long count = repository.count();
         assertThat(count,is(equalTo(10L)));
@@ -124,12 +124,12 @@ public class SampleBookRepositoryTest {
         Book book1 = new Book(RandomStringUtils.random(5),"Custom Query",System.currentTimeMillis());
         Book book2 = new Book(RandomStringUtils.random(5),null,System.currentTimeMillis());
         //indexing a book
-        repository.save(Arrays.asList(book1, book2));
+        repository.saveAll(Arrays.asList(book1, book2));
 
         SearchQuery searchQuery = new NativeSearchQueryBuilder()
                 .withQuery(matchAllQuery())
-                .withFilter(boolFilter().must(existsFilter("name")))
-                .withPageable(new PageRequest(0,10))
+                .withFilter(boolQuery().must(existsQuery("name")))
+                .withPageable(PageRequest.of(0, 10))
                 .build();
 
         Page<Book> books = repository.search(searchQuery);
@@ -154,7 +154,7 @@ public class SampleBookRepositoryTest {
         Book book2 = new Book(RandomStringUtils.random(5),"test",System.currentTimeMillis());
         book1.setPrice(10L);
         book2.setPrice(10L);
-        repository.save(Arrays.asList(book1, book2));
+        repository.saveAll(Arrays.asList(book1, book2));
 
         Page<Book> books = repository.findByNameAndPrice("test", 10, new PageRequest(0, 10));
         assertThat(books.getContent().size(), is(2));
@@ -164,7 +164,7 @@ public class SampleBookRepositoryTest {
     public void shouldReturnBooksWithName(){
         Book book1 = new Book(RandomStringUtils.random(5),"test1",System.currentTimeMillis());
         Book book2 = new Book(RandomStringUtils.random(5),"test2",System.currentTimeMillis());
-        repository.save(Arrays.asList(book1, book2));
+        repository.saveAll(Arrays.asList(book1, book2));
 
         Page<Book> books = repository.findByName("test1", new PageRequest(0, 10));
         assertThat(books.getContent().size(), is(1));
@@ -184,10 +184,10 @@ public class SampleBookRepositoryTest {
 		book1.setBuckets(map1);
 		book2.setBuckets(map2);
 
-		repository.save(Arrays.asList(book1,book2));
+        repository.saveAll(Arrays.asList(book1, book2));
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
-				.withQuery(nestedQuery("buckets", termQuery("buckets.1", "test3")))
+                .withQuery(nestedQuery("buckets", termQuery("buckets.1", "test3"), ScoreMode.None))
 				.build();
 
 		Page<Book> books = repository.search(searchQuery);
@@ -202,7 +202,7 @@ public class SampleBookRepositoryTest {
 		template.deleteIndex(Book.class);
 		template.createIndex(Book.class);
 		template.putMapping(Book.class);
-		template.refresh(Book.class, true);
+        template.refresh(Book.class);
 
 		Book book1 = new Book(RandomStringUtils.random(5),"test1",System.currentTimeMillis());
 		Book book2 = new Book(RandomStringUtils.random(5),"test2",System.currentTimeMillis());
@@ -216,10 +216,10 @@ public class SampleBookRepositoryTest {
 		book1.setBuckets(map1);
 		book2.setBuckets(map2);
 
-		repository.save(Arrays.asList(book1,book2));
+        repository.saveAll(Arrays.asList(book1, book2));
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
-				.withQuery(nestedQuery("buckets", termQuery("buckets.1", "test3")))
+                .withQuery(nestedQuery("buckets", termQuery("buckets.1", "test3"), ScoreMode.None))
 				.build();
 
 		Page<Book> books = repository.search(searchQuery);
@@ -235,7 +235,7 @@ public class SampleBookRepositoryTest {
         Book book2 = new Book(RandomStringUtils.random(5),"test And",System.currentTimeMillis());
         book1.setPrice(10L);
         book2.setPrice(10L);
-        repository.save(Arrays.asList(book1, book2));
+        repository.saveAll(Arrays.asList(book1, book2));
 
         Page<Book> books = repository.findByNameOrPrice("message", 10, new PageRequest(0, 10));
         assertThat(books.getContent().size(), is(2));
@@ -247,7 +247,7 @@ public class SampleBookRepositoryTest {
         Book book2 = new Book(RandomStringUtils.random(5),"test And",System.currentTimeMillis());
         book1.setPrice(10L);
         book2.setPrice(10L);
-        repository.save(Arrays.asList(book1, book2));
+        repository.saveAll(Arrays.asList(book1, book2));
 
         Iterable<Book> books = repository.search(matchAllQuery());
         assertThat(books, is(notNullValue()));

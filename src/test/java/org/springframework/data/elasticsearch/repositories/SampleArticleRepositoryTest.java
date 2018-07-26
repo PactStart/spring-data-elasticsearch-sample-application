@@ -8,7 +8,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.annotation.Resource;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +45,7 @@ public class SampleArticleRepositoryTest {
         //Indexing using sampleArticleRepository
         sampleArticleRepository.save(article);
         //lets try to search same record in elasticsearch
-        Article indexedArticle = sampleArticleRepository.findOne(article.getId());
+        Article indexedArticle = sampleArticleRepository.findById(article.getId()).get();
         assertThat(indexedArticle,is(notNullValue()));
         assertThat(indexedArticle.getId(),is(article.getId()));
         assertThat(indexedArticle.getAuthors().size(),is(authors.size()));

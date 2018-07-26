@@ -16,12 +16,12 @@
 package org.springframework.data.elasticsearch.entities;
 
 
-import java.util.List;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+
+import java.util.List;
 
 /**
  * @author Rizwan Idrees
@@ -29,7 +29,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  * @author Artur Konczak
  */
 
-@Document(indexName = "person-multiple-level-nested", type = "user", indexStoreType = "memory", shards = 1, replicas = 0, refreshInterval = "-1")
+@Document(indexName = "person-multiple-level-nested", type = "user", indexStoreType = "fs", shards = 1, replicas = 0, refreshInterval = "-1")
 public class PersonMultipleLevelNested {
 
 	@Id

@@ -1,16 +1,16 @@
 package org.springframework.data.elasticsearch.entities;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
-@Document(indexName = "book",type = "book" , shards = 1, replicas = 0, indexStoreType = "memory", refreshInterval = "-1")
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+@Document(indexName = "book", type = "book", shards = 1, replicas = 0, indexStoreType = "fs", refreshInterval = "-1")
 public class Book {
 
     @Id

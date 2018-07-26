@@ -35,6 +35,7 @@ public class SampleProductRepositoryTest {
         sampleProductRepository
                 .index(new Product(
                         "2",
+
                         "test Product 2",
                         "How great would it be if we could search for this other product.",
                         true));

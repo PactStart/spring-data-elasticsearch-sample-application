@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repositories;
 
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.Before;
@@ -37,9 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
@@ -63,15 +62,15 @@ public class NestedObjectTests {
     public void before() {
         elasticsearchTemplate.deleteIndex(Book.class);
         elasticsearchTemplate.createIndex(Book.class);
-        elasticsearchTemplate.refresh(Book.class, true);
+		elasticsearchTemplate.refresh(Book.class);
         elasticsearchTemplate.deleteIndex(Person.class);
         elasticsearchTemplate.createIndex(Person.class);
         elasticsearchTemplate.putMapping(Person.class);
-        elasticsearchTemplate.refresh(Person.class, true);
+		elasticsearchTemplate.refresh(Person.class);
 		elasticsearchTemplate.deleteIndex(PersonMultipleLevelNested.class);
 		elasticsearchTemplate.createIndex(PersonMultipleLevelNested.class);
 		elasticsearchTemplate.putMapping(PersonMultipleLevelNested.class);
-		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class, true);
+		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class);
     }
 
     @Test
@@ -88,7 +87,7 @@ public class NestedObjectTests {
         // when
         bookRepository.save(book);
         // then
-        assertThat(bookRepository.findOne(id), is(notNullValue()));
+		assertThat(bookRepository.findById(id).get(), is(notNullValue()));
     }
 
     @Test
@@ -141,9 +140,9 @@ public class NestedObjectTests {
 
         elasticsearchTemplate.putMapping(Person.class);
         elasticsearchTemplate.bulkIndex(indexQueries);
-        elasticsearchTemplate.refresh(Person.class, true);
+		elasticsearchTemplate.refresh(Person.class);
 
-        QueryBuilder builder = nestedQuery("car", boolQuery().must(termQuery("car.name", "saturn")).must(termQuery("car.model", "imprezza")));
+		QueryBuilder builder = nestedQuery("car", boolQuery().must(termQuery("car.name", "saturn")).must(termQuery("car.model", "imprezza")), ScoreMode.None);
 
         SearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(builder).build();
         List<Person> persons = elasticsearchTemplate.queryForList(searchQuery, Person.class);
@@ -160,7 +159,7 @@ public class NestedObjectTests {
 		//when
 		elasticsearchTemplate.putMapping(PersonMultipleLevelNested.class);
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class, true);
+		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class);
 
 		//then
 		GetQuery getQuery = new GetQuery();
@@ -177,12 +176,12 @@ public class NestedObjectTests {
 		//when
 		elasticsearchTemplate.putMapping(PersonMultipleLevelNested.class);
 		elasticsearchTemplate.bulkIndex(indexQueries);
-		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class, true);
+		elasticsearchTemplate.refresh(PersonMultipleLevelNested.class);
 
 		//then
 		BoolQueryBuilder builder = boolQuery();
-		builder.must(nestedQuery("girlFriends", termQuery("girlFriends.type", "temp")))
-				.must(nestedQuery("girlFriends.cars", termQuery("girlFriends.cars.name", "Ford".toLowerCase())));
+		builder.must(nestedQuery("girlFriends", termQuery("girlFriends.type", "temp"), ScoreMode.None))
+				.must(nestedQuery("girlFriends.cars", termQuery("girlFriends.cars.name", "Ford".toLowerCase()), ScoreMode.None));
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(builder)

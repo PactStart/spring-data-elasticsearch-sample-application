@@ -1,13 +1,6 @@
 package org.springframework.data.elasticsearch;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.hamcrest.core.Is.is;
-
-import java.util.Arrays;
-
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,12 +8,20 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.data.elasticsearch.entities.Contact;
 import org.springframework.data.elasticsearch.entities.Manuscript;
 import org.springframework.data.elasticsearch.entities.Role;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.Arrays;
+
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.hamcrest.core.Is.is;
 
 /**
  * Created by huse01 on 31/03/14.
@@ -77,11 +78,11 @@ public class ComplexNestedTypeContactTests {
 				.withType("contact-test-type").build();
 
 		template.bulkIndex(Arrays.asList(indexQuery));
-		template.refresh("test-contact-test", true);
+		template.refresh("test-contact-test");
 
 		BoolQueryBuilder builder = boolQuery();
-		builder.must(nestedQuery("manuscripts", termQuery("manuscripts.status", "ACCEPTED")))
-				.must(nestedQuery("manuscripts.role", termQuery("manuscripts.role.name", "role3")));
+//		builder.must(nestedQuery("manuscripts", termQuery("manuscripts.status", "ACCEPTED"), ScoreMode.None))
+//				.must(nestedQuery("manuscripts.role", termQuery("manuscripts.role.name", "role3"), ScoreMode.None));
 
 		SearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(builder).build();

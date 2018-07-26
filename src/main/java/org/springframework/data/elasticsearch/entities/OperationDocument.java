@@ -1,10 +1,13 @@
 package org.springframework.data.elasticsearch.entities;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+
 import java.util.Date;
 import java.util.List;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.*;
 
 /**
  * Created by mohsinhusen on 10/04/15.
@@ -16,25 +19,25 @@ public class OperationDocument {
 	private Long id;
 
 	@Field(
-			type = FieldType.String,
-			index = FieldIndex.analyzed,
+            type = FieldType.Text,
+            index = true,
 			searchAnalyzer = "standard",
-			indexAnalyzer = "standard",
+            analyzer = "standard",
 			store = true
 	)
 	private String operationName;
 
 	@Field(
 			type = FieldType.Date,
-			index = FieldIndex.not_analyzed,
+            index = true,
 			store = true,
 			format = DateFormat.custom, pattern = "dd.MM.yyyy hh:mm"
 	)
 	private Date dateUp;
 
 	@Field(
-			type = FieldType.String,
-			index = FieldIndex.not_analyzed,
+            type = FieldType.Text,
+            index = true,
 			store = false
 	)
 	private String someTransientData;

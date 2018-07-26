@@ -1,11 +1,9 @@
 package org.springframework.data.elasticsearch.entities;
 
-import java.util.List;
-import java.util.Set;
-
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldIndex;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+
+import java.util.List;
 
 /**
  * Created by huse01 on 31/03/14.
@@ -14,7 +12,7 @@ public class Manuscript {
 
 	private String title;
 	private String abstractText;
-	@Field(type = FieldType.String, index = FieldIndex.not_analyzed)
+    @Field(type = FieldType.Text, index = true)
 	private String status;
 	@Field(type = FieldType.Nested)
 	private List<Role> role;

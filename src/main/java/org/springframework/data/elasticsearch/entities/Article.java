@@ -3,19 +3,17 @@ package org.springframework.data.elasticsearch.entities;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.NestedField;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.analyzed;
-import static org.springframework.data.elasticsearch.annotations.FieldIndex.not_analyzed;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
-import static org.springframework.data.elasticsearch.annotations.FieldType.String;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 
-@Document(indexName = "articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1", indexStoreType = "memory")
+@Document(indexName = "articles", type = "article", shards = 1, replicas = 0, refreshInterval = "-1", indexStoreType = "fs")
 public class Article {
 
     @Id
@@ -24,10 +22,10 @@ public class Article {
     private String title;
 
     @MultiField(
-            mainField = @Field(type = String, index = analyzed),
+            mainField = @Field(type = Text, index = true),
             otherFields = {
-                    @NestedField(dotSuffix = "untouched", type = String, store = true, index = not_analyzed),
-                    @NestedField(dotSuffix = "sort", type = String, store = true, indexAnalyzer = "keyword")
+                    @InnerField(suffix = "untouched", type = Text, store = true, index = true),
+                    @InnerField(suffix = "sort", type = Text, store = true, searchAnalyzer = "keyword")
             }
     )
     private List<String> authors = new ArrayList<String>();
@@ -35,7 +33,7 @@ public class Article {
     @Field(type = Integer, store = true)
     private List<Integer> publishedYears = new ArrayList<Integer>();
 
-    @Field(type = String, store = true)
+    @Field(type = Text, store = true)
     private Collection<String> tags = new ArrayList<String>();
 
     private int score;
